@@ -1,8 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dashboard_page.dart';
-import 'add_sales_page.dart';
-import 'update_sales_page.dart';
-import 'login_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -162,13 +158,7 @@ class HomePage extends StatelessWidget {
                                   iconData: Icons.grid_view_rounded,
                                   accentColor: const Color(0xFF1D4ED8),
                                   onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const DashboardPage(),
-                                      ),
-                                    );
+                                    Navigator.pushNamed(context, '/dashboard');
                                   },
                                 ),
                                 _buildMenuItem(
@@ -178,13 +168,7 @@ class HomePage extends StatelessWidget {
                                   iconData: Icons.add_rounded,
                                   accentColor: const Color(0xFFEF4444),
                                   onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const AddSalesPage(),
-                                      ),
-                                    );
+                                    Navigator.pushNamed(context, '/add-sales');
                                   },
                                 ),
                                 _buildMenuItem(
@@ -194,13 +178,8 @@ class HomePage extends StatelessWidget {
                                   iconData: Icons.refresh_rounded,
                                   accentColor: const Color(0xFF10B981),
                                   onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const UpdateSalesPage(),
-                                      ),
-                                    );
+                                    Navigator.pushNamed(
+                                        context, '/update-sales');
                                   },
                                 ),
                                 _buildMenuItem(
@@ -210,11 +189,10 @@ class HomePage extends StatelessWidget {
                                   iconData: Icons.logout_rounded,
                                   accentColor: const Color(0xFF64748B),
                                   onTap: () {
-                                    Navigator.pushReplacement(
+                                    Navigator.pushNamedAndRemoveUntil(
                                       context,
-                                      MaterialPageRoute(
-                                        builder: (context) => const LoginPage(),
-                                      ),
+                                      '/',
+                                      (route) => false,
                                     );
                                   },
                                 ),

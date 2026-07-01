@@ -296,7 +296,8 @@ class _AddSalesPageState extends State<AddSalesPage> {
                                 height: 52,
                                 child: OutlinedButton(
                                   onPressed: () {
-                                    Navigator.pop(context);
+                                    Navigator.pushReplacementNamed(
+                                        context, '/home');
                                   },
                                   style: OutlinedButton.styleFrom(
                                     foregroundColor: const Color(0xFF0F172A),

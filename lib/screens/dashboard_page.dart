@@ -229,7 +229,8 @@ class DashboardPage extends StatelessWidget {
                             height: 52,
                             child: ElevatedButton(
                               onPressed: () {
-                                Navigator.pop(context);
+                                Navigator.pushReplacementNamed(
+                                    context, '/home');
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF0F172A),

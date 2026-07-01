@@ -76,10 +76,13 @@ class _UpdateSalesPageState extends State<UpdateSalesPage> {
                       Container(
                         padding: const EdgeInsets.all(18),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.14),
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [Color(0xFFEFF6FF), Color(0xFFDBEAFE)],
+                          ),
                           borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.18)),
+                          border: Border.all(color: const Color(0xFFBFDBFE)),
                         ),
                         child: Row(
                           children: [
@@ -87,14 +90,12 @@ class _UpdateSalesPageState extends State<UpdateSalesPage> {
                               width: 52,
                               height: 52,
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.18),
+                                color: const Color(0xFF1D4ED8)
+                                    .withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(16),
                               ),
-                              child: const Icon(
-                                Icons.edit_note_rounded,
-                                color: Colors.white,
-                                size: 28,
-                              ),
+                              child: const Icon(Icons.edit_note_rounded,
+                                  color: Color(0xFF1D4ED8), size: 28),
                             ),
                             const SizedBox(width: 14),
                             const Expanded(
@@ -104,7 +105,7 @@ class _UpdateSalesPageState extends State<UpdateSalesPage> {
                                   Text(
                                     'Update Data Penjualan',
                                     style: TextStyle(
-                                      color: Colors.white,
+                                      color: Color(0xFF0F172A),
                                       fontSize: 20,
                                       fontWeight: FontWeight.w800,
                                     ),
@@ -113,7 +114,7 @@ class _UpdateSalesPageState extends State<UpdateSalesPage> {
                                   Text(
                                     'Pilih faktur lalu perbarui detail transaksi yang diperlukan.',
                                     style: TextStyle(
-                                      color: Colors.white,
+                                      color: Color(0xFF475569),
                                       fontSize: 13,
                                       height: 1.35,
                                     ),
@@ -315,7 +316,10 @@ class _UpdateSalesPageState extends State<UpdateSalesPage> {
                                     SizedBox(
                                       height: 52,
                                       child: OutlinedButton(
-                                        onPressed: () => Navigator.pop(context),
+                                        onPressed: () {
+                                          Navigator.pushReplacementNamed(
+                                              context, '/home');
+                                        },
                                         style: OutlinedButton.styleFrom(
                                           foregroundColor:
                                               const Color(0xFF0F172A),

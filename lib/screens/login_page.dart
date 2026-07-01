@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'home_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -198,12 +197,9 @@ class _LoginPageState extends State<LoginPage> {
                                   onPressed: () {
                                     if (_usernameController.text.isNotEmpty &&
                                         _passwordController.text.isNotEmpty) {
-                                      Navigator.pushReplacement(
+                                      Navigator.pushReplacementNamed(
                                         context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              const HomePage(),
-                                        ),
+                                        '/home',
                                       );
                                     } else {
                                       ScaffoldMessenger.of(context)
