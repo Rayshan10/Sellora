@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'screens/login_page.dart';
-import 'models/sales_data.dart';
 
 void main() {
   runApp(const MyApp());
