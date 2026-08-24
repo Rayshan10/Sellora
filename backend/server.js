@@ -3,6 +3,8 @@ const cors = require("cors");
 require("dotenv").config();
 
 const connectDB = require("./config/database");
+const authRoutes = require("./routes/authRoutes");
+const salesRoutes = require("./routes/salesRoutes");
 
 const app = express();
 
@@ -13,11 +15,15 @@ app.use(express.json());
 // Database
 connectDB();
 
+// Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/sales", salesRoutes);
+
 // Test route
 app.get("/", (req, res) => {
     res.json({
-    message: "Sellora API is running",
-    status: "success",
+        message: "Sellora API is running",
+        status: "success",
     });
 });
 

@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
         WidgetsBinding.instance.platformDispatcher.defaultRouteName;
 
     return MaterialApp(
-      title: 'Management System',
+      title: 'Sellora',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,

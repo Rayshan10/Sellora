@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../services/auth_service.dart';
+
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
 
@@ -10,13 +12,72 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
   bool _obscurePassword = true;
+  bool _isLoading = false;
 
   @override
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleLogin() async {
+    if (_isLoading) return;
+
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text;
+
+    if (username.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Username dan password wajib diisi'),
+        ),
+      );
+      return;
+    }
+
+    FocusScope.of(context).unfocus();
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await AuthService.login(
+        username: username,
+        password: password,
+      );
+
+      if (!mounted) return;
+
+      Navigator.pushReplacementNamed(
+        context,
+        '/home',
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      String message = error.toString();
+
+      if (message.startsWith('Exception: ')) {
+        message = message.substring('Exception: '.length);
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -27,7 +88,11 @@ class _LoginPageState extends State<LoginPage> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF0F172A), Color(0xFF1D4ED8), Color(0xFF38BDF8)],
+            colors: [
+              Color(0xFF0F172A),
+              Color(0xFF1D4ED8),
+              Color(0xFF38BDF8),
+            ],
           ),
         ),
         child: SafeArea(
@@ -37,13 +102,17 @@ class _LoginPageState extends State<LoginPage> {
                 top: -40,
                 right: -30,
                 child: _BackgroundOrb(
-                    size: 140, color: Colors.white.withValues(alpha: 0.12)),
+                  size: 140,
+                  color: Colors.white.withValues(alpha: 0.12),
+                ),
               ),
               Positioned(
                 bottom: 80,
                 left: -50,
                 child: _BackgroundOrb(
-                    size: 180, color: Colors.white.withValues(alpha: 0.08)),
+                  size: 180,
+                  color: Colors.white.withValues(alpha: 0.08),
+                ),
               ),
               Center(
                 child: SingleChildScrollView(
@@ -55,14 +124,18 @@ class _LoginPageState extends State<LoginPage> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         const SizedBox(height: 24),
+
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 18, vertical: 10),
+                            horizontal: 18,
+                            vertical: 10,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.14),
                             borderRadius: BorderRadius.circular(999),
                             border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.18)),
+                              color: Colors.white.withValues(alpha: 0.18),
+                            ),
                           ),
                           child: const Text(
                             'Sales Management',
@@ -74,7 +147,9 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                         ),
+
                         const SizedBox(height: 18),
+
                         const Text(
                           'Selamat datang kembali',
                           textAlign: TextAlign.center,
@@ -85,7 +160,9 @@ class _LoginPageState extends State<LoginPage> {
                             height: 1.1,
                           ),
                         ),
+
                         const SizedBox(height: 10),
+
                         Text(
                           'Masuk untuk melanjutkan ke dashboard dan kelola data penjualan dengan lebih cepat.',
                           textAlign: TextAlign.center,
@@ -95,7 +172,9 @@ class _LoginPageState extends State<LoginPage> {
                             height: 1.5,
                           ),
                         ),
+
                         const SizedBox(height: 28),
+
                         Container(
                           padding: const EdgeInsets.all(22),
                           decoration: BoxDecoration(
@@ -109,7 +188,8 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ],
                             border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.25)),
+                              color: Colors.white.withValues(alpha: 0.25),
+                            ),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -118,10 +198,12 @@ class _LoginPageState extends State<LoginPage> {
                                 controller: _usernameController,
                                 keyboardType: TextInputType.text,
                                 textInputAction: TextInputAction.next,
+                                enabled: !_isLoading,
                                 decoration: InputDecoration(
                                   labelText: 'Username',
-                                  prefixIcon:
-                                      const Icon(Icons.person_outline_rounded),
+                                  prefixIcon: const Icon(
+                                    Icons.person_outline_rounded,
+                                  ),
                                   filled: true,
                                   fillColor: const Color(0xFFF8FAFC),
                                   border: OutlineInputBorder(
@@ -131,30 +213,41 @@ class _LoginPageState extends State<LoginPage> {
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(18),
                                     borderSide: const BorderSide(
-                                        color: Color(0xFFE2E8F0)),
+                                      color: Color(0xFFE2E8F0),
+                                    ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(18),
                                     borderSide: const BorderSide(
-                                        color: Color(0xFF2563EB), width: 1.4),
+                                      color: Color(0xFF2563EB),
+                                      width: 1.4,
+                                    ),
                                   ),
                                 ),
                               ),
+
                               const SizedBox(height: 16),
+
                               TextField(
                                 controller: _passwordController,
                                 obscureText: _obscurePassword,
                                 textInputAction: TextInputAction.done,
+                                enabled: !_isLoading,
+                                onSubmitted: (_) => _handleLogin(),
                                 decoration: InputDecoration(
                                   labelText: 'Password',
-                                  prefixIcon:
-                                      const Icon(Icons.lock_outline_rounded),
+                                  prefixIcon: const Icon(
+                                    Icons.lock_outline_rounded,
+                                  ),
                                   suffixIcon: IconButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        _obscurePassword = !_obscurePassword;
-                                      });
-                                    },
+                                    onPressed: _isLoading
+                                        ? null
+                                        : () {
+                                            setState(() {
+                                              _obscurePassword =
+                                                  !_obscurePassword;
+                                            });
+                                          },
                                     icon: Icon(
                                       _obscurePassword
                                           ? Icons.visibility_outlined
@@ -170,68 +263,76 @@ class _LoginPageState extends State<LoginPage> {
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(18),
                                     borderSide: const BorderSide(
-                                        color: Color(0xFFE2E8F0)),
+                                      color: Color(0xFFE2E8F0),
+                                    ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(18),
                                     borderSide: const BorderSide(
-                                        color: Color(0xFF2563EB), width: 1.4),
+                                      color: Color(0xFF2563EB),
+                                      width: 1.4,
+                                    ),
                                   ),
                                 ),
                               ),
+
                               const SizedBox(height: 12),
+
                               Align(
                                 alignment: Alignment.centerRight,
                                 child: TextButton(
-                                  onPressed: () {},
+                                  onPressed: _isLoading ? null : () {},
                                   style: TextButton.styleFrom(
                                     foregroundColor: const Color(0xFF2563EB),
                                   ),
                                   child: const Text('Lupa password?'),
                                 ),
                               ),
+
                               const SizedBox(height: 8),
+
                               SizedBox(
                                 height: 54,
                                 child: ElevatedButton(
-                                  onPressed: () {
-                                    if (_usernameController.text.isNotEmpty &&
-                                        _passwordController.text.isNotEmpty) {
-                                      Navigator.pushReplacementNamed(
-                                        context,
-                                        '/home',
-                                      );
-                                    } else {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                              'Please enter username and password'),
-                                        ),
-                                      );
-                                    }
-                                  },
+                                  onPressed: _isLoading ? null : _handleLogin,
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xFF0F172A),
                                     foregroundColor: Colors.white,
+                                    disabledBackgroundColor:
+                                        const Color(0xFF64748B),
+                                    disabledForegroundColor: Colors.white,
                                     elevation: 0,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(18),
                                     ),
                                   ),
-                                  child: const Text(
-                                    'Login',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
+                                  child: _isLoading
+                                      ? const SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2.5,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                              Colors.white,
+                                            ),
+                                          ),
+                                        )
+                                      : const Text(
+                                          'Login',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
                                 ),
                               ),
                             ],
                           ),
                         ),
+
                         const SizedBox(height: 20),
+
                         Text(
                           'Gunakan akun yang terdaftar untuk mengakses aplikasi.',
                           textAlign: TextAlign.center,
@@ -254,7 +355,10 @@ class _LoginPageState extends State<LoginPage> {
 }
 
 class _BackgroundOrb extends StatelessWidget {
-  const _BackgroundOrb({required this.size, required this.color});
+  const _BackgroundOrb({
+    required this.size,
+    required this.color,
+  });
 
   final double size;
   final Color color;
