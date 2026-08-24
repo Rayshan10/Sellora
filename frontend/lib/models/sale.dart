@@ -19,7 +19,7 @@ class Sale {
     return Sale(
       id: json['_id']?.toString() ?? '',
       invoiceNumber: json['invoiceNumber']?.toString() ?? '',
-      saleDate: DateTime.parse(json['saleDate'].toString()),
+      saleDate: DateTime.parse(json['saleDate']).toLocal(),
       customerName: json['customerName']?.toString() ?? '',
       itemQuantity: (json['itemQuantity'] as num?)?.toInt() ?? 0,
       totalSale: (json['totalSale'] as num?)?.toDouble() ?? 0,

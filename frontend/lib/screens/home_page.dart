@@ -184,6 +184,16 @@ class HomePage extends StatelessWidget {
                                 ),
                                 _buildMenuItem(
                                   context,
+                                  title: 'Delete',
+                                  subtitle: 'Hapus penjualan',
+                                  iconData: Icons.delete_outline_rounded,
+                                  accentColor: const Color(0xFFDC2626),
+                                  onTap: () {
+                                    Navigator.pushNamed(context, '/delete-sales');
+                                  },
+                                ),
+                                _buildMenuItem(
+                                  context,
                                   title: 'Logout',
                                   subtitle: 'Keluar aplikasi',
                                   iconData: Icons.logout_rounded,

@@ -4,6 +4,7 @@ import 'screens/home_page.dart';
 import 'screens/dashboard_page.dart';
 import 'screens/add_sales_page.dart';
 import 'screens/update_sales_page.dart';
+import 'screens/delete_sales_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,6 +32,7 @@ class MyApp extends StatelessWidget {
         '/dashboard': (context) => const DashboardPage(),
         '/add-sales': (context) => const AddSalesPage(),
         '/update-sales': (context) => const UpdateSalesPage(),
+        '/delete-sales': (context) => const DeleteSalesPage(),
       },
     );
   }
