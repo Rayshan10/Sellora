@@ -1,259 +1,443 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../models/sales_data.dart';
 
-class DashboardPage extends StatelessWidget {
+import '../models/sale.dart';
+import '../services/sales_service.dart';
+
+class DashboardPage extends StatefulWidget {
   const DashboardPage({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    final int totalTransactions = salesDataList.length;
-    final double totalRevenue =
-        salesDataList.fold(0, (sum, data) => sum + data.totalSale);
+  State<DashboardPage> createState() => _DashboardPageState();
+}
 
+class _DashboardPageState extends State<DashboardPage> {
+  late Future<List<Sale>> _salesFuture;
+
+  final NumberFormat _currencyFormat = NumberFormat.currency(
+    locale: 'id_ID',
+    symbol: 'Rp ',
+    decimalDigits: 0,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSales();
+  }
+
+  void _loadSales() {
+    _salesFuture = SalesService.getSales();
+  }
+
+  Future<void> _refreshSales() async {
+    setState(() {
+      _loadSales();
+    });
+
+    await _salesFuture;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF0F172A), Color(0xFF1D4ED8), Color(0xFF38BDF8)],
+            colors: [
+              Color(0xFF0F172A),
+              Color(0xFF1D4ED8),
+              Color(0xFF38BDF8),
+            ],
           ),
         ),
         child: SafeArea(
-          child: Stack(
-            children: [
-              Positioned(
-                top: -40,
-                right: -30,
-                child: _BackgroundOrb(
-                  size: 150,
-                  color: Colors.white.withValues(alpha: 0.12),
-                ),
-              ),
-              Positioned(
-                bottom: 70,
-                left: -55,
-                child: _BackgroundOrb(
-                  size: 190,
-                  color: Colors.white.withValues(alpha: 0.08),
-                ),
-              ),
-              Column(
+          child: FutureBuilder<List<Sale>>(
+            future: _salesFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Colors.white,
+                    ),
+                  ),
+                );
+              }
+
+              if (snapshot.hasError) {
+                return _ErrorState(
+                  message: snapshot.error.toString(),
+                  onRetry: () {
+                    setState(() {
+                      _loadSales();
+                    });
+                  },
+                );
+              }
+
+              final sales = snapshot.data ?? [];
+
+              final int totalTransactions = sales.length;
+
+              final double totalRevenue = sales.fold(
+                0,
+                (sum, data) => sum + data.totalSale,
+              );
+
+              return Stack(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-                    child: Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.14),
-                        borderRadius: BorderRadius.circular(28),
-                        border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.18)),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 56,
-                            height: 56,
-                            decoration: BoxDecoration(
+                  Positioned(
+                    top: -40,
+                    right: -30,
+                    child: _BackgroundOrb(
+                      size: 150,
+                      color: Colors.white.withValues(alpha: 0.12),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 70,
+                    left: -55,
+                    child: _BackgroundOrb(
+                      size: 190,
+                      color: Colors.white.withValues(alpha: 0.08),
+                    ),
+                  ),
+
+                  Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          20,
+                          20,
+                          20,
+                          12,
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.14),
+                            borderRadius: BorderRadius.circular(28),
+                            border: Border.all(
                               color: Colors.white.withValues(alpha: 0.18),
-                              borderRadius: BorderRadius.circular(18),
-                            ),
-                            child: const Icon(
-                              Icons.analytics_rounded,
-                              color: Colors.white,
-                              size: 30,
                             ),
                           ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Dashboard Penjualan',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  'Ringkasan transaksi, pelanggan, dan total penjualan.',
-                                  style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.8),
-                                    fontSize: 13,
-                                    height: 1.35,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _StatCard(
-                            label: 'Transaksi',
-                            value: totalTransactions.toString(),
-                            icon: Icons.receipt_long_rounded,
-                            accentColor: const Color(0xFF1D4ED8),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _StatCard(
-                            label: 'Omzet',
-                            value: currencyFormat.format(totalRevenue),
-                            icon: Icons.payments_rounded,
-                            accentColor: const Color(0xFF10B981),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Expanded(
-                    child: Container(
-                      width: double.infinity,
-                      margin: const EdgeInsets.fromLTRB(0, 8, 0, 0),
-                      padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.95),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(32),
-                          topRight: Radius.circular(32),
-                        ),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 30,
-                            offset: Offset(0, -8),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
+                          child: Row(
                             children: [
-                              const Text(
-                                'Data Penjualan',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w800,
-                                  color: Color(0xFF0F172A),
+                              Container(
+                                width: 56,
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  color:
+                                      Colors.white.withValues(alpha: 0.18),
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                                child: const Icon(
+                                  Icons.analytics_rounded,
+                                  color: Colors.white,
+                                  size: 30,
                                 ),
                               ),
-                              const Spacer(),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFEFF6FF),
-                                  borderRadius: BorderRadius.circular(999),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Dashboard Penjualan',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      'Ringkasan transaksi, pelanggan, dan total penjualan.',
+                                      style: TextStyle(
+                                        color: Colors.white
+                                            .withValues(alpha: 0.8),
+                                        fontSize: 13,
+                                        height: 1.35,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                child: const Text(
-                                  'Live Table',
-                                  style: TextStyle(
-                                    color: Color(0xFF1D4ED8),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _StatCard(
+                                label: 'Transaksi',
+                                value: totalTransactions.toString(),
+                                icon: Icons.receipt_long_rounded,
+                                accentColor:
+                                    const Color(0xFF1D4ED8),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _StatCard(
+                                label: 'Omzet',
+                                value: _currencyFormat.format(
+                                  totalRevenue,
+                                ),
+                                icon: Icons.payments_rounded,
+                                accentColor:
+                                    const Color(0xFF10B981),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      Expanded(
+                        child: Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.fromLTRB(
+                            0,
+                            8,
+                            0,
+                            0,
+                          ),
+                          padding: const EdgeInsets.fromLTRB(
+                            20,
+                            18,
+                            20,
+                            16,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.95),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(32),
+                              topRight: Radius.circular(32),
+                            ),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Colors.black26,
+                                blurRadius: 30,
+                                offset: Offset(0, -8),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment:
+                                CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Text(
+                                    'Data Penjualan',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w800,
+                                      color: Color(0xFF0F172A),
+                                    ),
+                                  ),
+                                  const Spacer(),
+
+                                  // Tombol refresh
+                                  IconButton(
+                                    onPressed: _refreshSales,
+                                    tooltip: 'Refresh data',
+                                    icon: const Icon(
+                                      Icons.refresh_rounded,
+                                      color: Color(0xFF1D4ED8),
+                                    ),
+                                  ),
+
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFEFF6FF),
+                                      borderRadius:
+                                          BorderRadius.circular(999),
+                                    ),
+                                    child: const Text(
+                                      'Live Table',
+                                      style: TextStyle(
+                                        color: Color(0xFF1D4ED8),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 18),
+
+                              Expanded(
+                                child: ClipRRect(
+                                  borderRadius:
+                                      BorderRadius.circular(24),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFF8FAFC),
+                                      border: Border.all(
+                                        color:
+                                            const Color(0xFFE2E8F0),
+                                      ),
+                                    ),
+                                    child: sales.isEmpty
+                                        ? const Center(
+                                            child: Text(
+                                              'Belum ada data penjualan',
+                                              style: TextStyle(
+                                                color:
+                                                    Color(0xFF64748B),
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          )
+                                        : SingleChildScrollView(
+                                            scrollDirection:
+                                                Axis.horizontal,
+                                            child: DataTable(
+                                              headingRowColor:
+                                                  WidgetStateProperty.all(
+                                                const Color(0xFF0F172A),
+                                              ),
+                                              headingTextStyle:
+                                                  const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight:
+                                                    FontWeight.w700,
+                                              ),
+                                              dataTextStyle:
+                                                  const TextStyle(
+                                                color:
+                                                    Color(0xFF0F172A),
+                                                fontSize: 13,
+                                              ),
+                                              columnSpacing: 24,
+                                              horizontalMargin: 18,
+                                              columns: const [
+                                                DataColumn(
+                                                  label:
+                                                      Text('No Faktur'),
+                                                ),
+                                                DataColumn(
+                                                  label:
+                                                      Text('Tanggal'),
+                                                ),
+                                                DataColumn(
+                                                  label:
+                                                      Text('Customer'),
+                                                ),
+                                                DataColumn(
+                                                  label: Text(
+                                                    'Jumlah Barang',
+                                                  ),
+                                                ),
+                                                DataColumn(
+                                                  label: Text(
+                                                    'Total Penjualan',
+                                                  ),
+                                                ),
+                                              ],
+                                              rows: sales.map((data) {
+                                                return DataRow(
+                                                  cells: [
+                                                    DataCell(
+                                                      Text(
+                                                        data.invoiceNumber,
+                                                      ),
+                                                    ),
+                                                    DataCell(
+                                                      Text(
+                                                        DateFormat(
+                                                          'dd/MM/yyyy',
+                                                        ).format(
+                                                          data.saleDate,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    DataCell(
+                                                      Text(
+                                                        data.customerName,
+                                                      ),
+                                                    ),
+                                                    DataCell(
+                                                      Text(
+                                                        data.itemQuantity
+                                                            .toString(),
+                                                      ),
+                                                    ),
+                                                    DataCell(
+                                                      Text(
+                                                        _currencyFormat
+                                                            .format(
+                                                          data.totalSale,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                );
+                                              }).toList(),
+                                            ),
+                                          ),
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 14),
+
+                              SizedBox(
+                                width: double.infinity,
+                                height: 52,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.pushReplacementNamed(
+                                      context,
+                                      '/home',
+                                    );
+                                  },
+                                  style:
+                                      ElevatedButton.styleFrom(
+                                    backgroundColor:
+                                        const Color(0xFF0F172A),
+                                    foregroundColor: Colors.white,
+                                    elevation: 0,
+                                    shape:
+                                        RoundedRectangleBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(18),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'Kembali',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 18),
-                          Expanded(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(24),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF8FAFC),
-                                  border: Border.all(
-                                      color: const Color(0xFFE2E8F0)),
-                                ),
-                                child: SingleChildScrollView(
-                                  scrollDirection: Axis.horizontal,
-                                  child: DataTable(
-                                    headingRowColor: WidgetStateProperty.all(
-                                        const Color(0xFF0F172A)),
-                                    headingTextStyle: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                    dataTextStyle: const TextStyle(
-                                      color: Color(0xFF0F172A),
-                                      fontSize: 13,
-                                    ),
-                                    columnSpacing: 24,
-                                    horizontalMargin: 18,
-                                    columns: const [
-                                      DataColumn(label: Text('No Faktur')),
-                                      DataColumn(label: Text('Tanggal')),
-                                      DataColumn(label: Text('Customer')),
-                                      DataColumn(label: Text('Jumlah Barang')),
-                                      DataColumn(
-                                          label: Text('Total Penjualan')),
-                                    ],
-                                    rows: salesDataList.map((data) {
-                                      return DataRow(
-                                        cells: [
-                                          DataCell(Text(data.invoiceNumber)),
-                                          DataCell(Text(DateFormat('dd/MM/yyyy')
-                                              .format(data.saleDate))),
-                                          DataCell(Text(data.customerName)),
-                                          DataCell(Text(
-                                              data.itemQuantity.toString())),
-                                          DataCell(Text(currencyFormat
-                                              .format(data.totalSale))),
-                                        ],
-                                      );
-                                    }).toList(),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-                          SizedBox(
-                            width: double.infinity,
-                            height: 52,
-                            child: ElevatedButton(
-                              onPressed: () {
-                                Navigator.pushReplacementNamed(
-                                    context, '/home');
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF0F172A),
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(18),
-                                ),
-                              ),
-                              child: const Text(
-                                'Kembali',
-                                style: TextStyle(
-                                    fontSize: 15, fontWeight: FontWeight.w700),
-                              ),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ],
-              ),
-            ],
+              );
+            },
           ),
         ),
       ),
@@ -261,8 +445,64 @@ class DashboardPage extends StatelessWidget {
   }
 }
 
+class _ErrorState extends StatelessWidget {
+  const _ErrorState({
+    required this.message,
+    required this.onRetry,
+  });
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.cloud_off_rounded,
+              color: Colors.white,
+              size: 50,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Gagal mengambil data',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.8),
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Coba Lagi'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _BackgroundOrb extends StatelessWidget {
-  const _BackgroundOrb({required this.size, required this.color});
+  const _BackgroundOrb({
+    required this.size,
+    required this.color,
+  });
 
   final double size;
   final Color color;
@@ -300,7 +540,9 @@ class _StatCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.16),
+        ),
       ),
       child: Row(
         children: [
@@ -311,12 +553,17 @@ class _StatCard extends StatelessWidget {
               color: accentColor.withValues(alpha: 0.16),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(icon, color: Colors.white, size: 24),
+            child: Icon(
+              icon,
+              color: Colors.white,
+              size: 24,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
               children: [
                 Text(
                   label,
