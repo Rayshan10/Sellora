@@ -1,5 +1,5 @@
-name: sales_management_app
-description: A simple sales management app.
+name: sellora
+description: Sellora - Sales management application.
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 

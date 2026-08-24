@@ -138,7 +138,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                           child: const Text(
-                            'Sales Management',
+                            'Sellora',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: Colors.white,

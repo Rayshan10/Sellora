@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -67,7 +68,7 @@ class HomePage extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text(
-                                  'Sales Management',
+                                  'Sellora',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 20,
@@ -198,7 +199,9 @@ class HomePage extends StatelessWidget {
                                   subtitle: 'Keluar aplikasi',
                                   iconData: Icons.logout_rounded,
                                   accentColor: const Color(0xFF64748B),
-                                  onTap: () {
+                                  onTap: () async {
+                                    await AuthService.logout();
+                                    if (!context.mounted) return;
                                     Navigator.pushNamedAndRemoveUntil(
                                       context,
                                       '/',
