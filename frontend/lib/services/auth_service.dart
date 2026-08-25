@@ -39,6 +39,32 @@ class AuthService {
     );
   }
 
+  static Future<Map<String, dynamic>> getMe() async {
+    final token = await TokenStorage.getToken();
+
+    if (token == null || token.isEmpty) {
+      throw Exception('Token tidak ditemukan');
+    }
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/auth/me'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      return Map<String, dynamic>.from(data['user']);
+    }
+
+    throw Exception(
+      data['message'] ?? 'Gagal mengambil data user',
+    );
+  }
+
   static Future<void> logout() async {
     await TokenStorage.removeToken();
   }

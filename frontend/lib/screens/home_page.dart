@@ -1,8 +1,44 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  Map<String, dynamic>? _user;
+  bool _isLoadingUser = true;
+  String? _userError;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    try {
+      final user = await AuthService.getMe();
+
+      if (!mounted) return;
+
+      setState(() {
+        _user = user;
+        _isLoadingUser = false;
+        _userError = null;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _isLoadingUser = false;
+        _userError = e.toString();
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -12,7 +48,11 @@ class HomePage extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF0F172A), Color(0xFF1D4ED8), Color(0xFF38BDF8)],
+            colors: [
+              Color(0xFF0F172A),
+              Color(0xFF1D4ED8),
+              Color(0xFF38BDF8),
+            ],
           ),
         ),
         child: SafeArea(
@@ -159,7 +199,10 @@ class HomePage extends StatelessWidget {
                                   iconData: Icons.grid_view_rounded,
                                   accentColor: const Color(0xFF1D4ED8),
                                   onTap: () {
-                                    Navigator.pushNamed(context, '/dashboard');
+                                    Navigator.pushNamed(
+                                      context,
+                                      '/dashboard',
+                                    );
                                   },
                                 ),
                                 _buildMenuItem(
@@ -169,7 +212,10 @@ class HomePage extends StatelessWidget {
                                   iconData: Icons.add_rounded,
                                   accentColor: const Color(0xFFEF4444),
                                   onTap: () {
-                                    Navigator.pushNamed(context, '/add-sales');
+                                    Navigator.pushNamed(
+                                      context,
+                                      '/add-sales',
+                                    );
                                   },
                                 ),
                                 _buildMenuItem(
@@ -180,7 +226,9 @@ class HomePage extends StatelessWidget {
                                   accentColor: const Color(0xFF10B981),
                                   onTap: () {
                                     Navigator.pushNamed(
-                                        context, '/update-sales');
+                                      context,
+                                      '/update-sales',
+                                    );
                                   },
                                 ),
                                 _buildMenuItem(
@@ -190,7 +238,10 @@ class HomePage extends StatelessWidget {
                                   iconData: Icons.delete_outline_rounded,
                                   accentColor: const Color(0xFFDC2626),
                                   onTap: () {
-                                    Navigator.pushNamed(context, '/delete-sales');
+                                    Navigator.pushNamed(
+                                      context,
+                                      '/delete-sales',
+                                    );
                                   },
                                 ),
                                 _buildMenuItem(
@@ -201,7 +252,9 @@ class HomePage extends StatelessWidget {
                                   accentColor: const Color(0xFF64748B),
                                   onTap: () async {
                                     await AuthService.logout();
+
                                     if (!context.mounted) return;
+
                                     Navigator.pushNamedAndRemoveUntil(
                                       context,
                                       '/',
@@ -213,35 +266,21 @@ class HomePage extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 14),
+
+                          // ==============================
+                          // DATA USER DARI API /auth/me
+                          // ==============================
                           Container(
                             width: double.infinity,
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: const Color(0xFFF8FAFC),
                               borderRadius: BorderRadius.circular(20),
-                              border:
-                                  Border.all(color: const Color(0xFFE2E8F0)),
+                              border: Border.all(
+                                color: const Color(0xFFE2E8F0),
+                              ),
                             ),
-                            child: const Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'NPM: 123456789',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF0F172A),
-                                  ),
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  'Nama: Mahasiswa Contoh',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF475569),
-                                  ),
-                                ),
-                              ],
-                            ),
+                            child: _buildUserProfile(),
                           ),
                         ],
                       ),
@@ -253,6 +292,95 @@ class HomePage extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildUserProfile() {
+    if (_isLoadingUser) {
+      return const Row(
+        children: [
+          SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+            ),
+          ),
+          SizedBox(width: 12),
+          Text(
+            'Memuat data user...',
+            style: TextStyle(
+              color: Color(0xFF64748B),
+              fontSize: 14,
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (_userError != null) {
+      return Row(
+        children: [
+          const Icon(
+            Icons.error_outline_rounded,
+            color: Color(0xFFDC2626),
+          ),
+          const SizedBox(width: 10),
+          const Expanded(
+            child: Text(
+              'Gagal mengambil data user',
+              style: TextStyle(
+                color: Color(0xFFDC2626),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          IconButton(
+            onPressed: _loadUser,
+            icon: const Icon(Icons.refresh_rounded),
+            tooltip: 'Coba lagi',
+          ),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Username',
+          style: TextStyle(
+            fontSize: 12,
+            color: Color(0xFF64748B),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          _user?['username'] ?? '-',
+          style: const TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 15,
+            color: Color(0xFF0F172A),
+          ),
+        ),
+        const SizedBox(height: 12),
+        const Text(
+          'Nama',
+          style: TextStyle(
+            fontSize: 12,
+            color: Color(0xFF64748B),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          _user?['name'] ?? '-',
+          style: const TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 15,
+            color: Color(0xFF475569),
+          ),
+        ),
+      ],
     );
   }
 
@@ -273,7 +401,9 @@ class HomePage extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(
+              color: const Color(0xFFE2E8F0),
+            ),
             boxShadow: const [
               BoxShadow(
                 color: Color(0x12000000),
@@ -295,7 +425,11 @@ class HomePage extends StatelessWidget {
                     color: accentColor.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Icon(iconData, size: 28, color: accentColor),
+                  child: Icon(
+                    iconData,
+                    size: 28,
+                    color: accentColor,
+                  ),
                 ),
                 const SizedBox(height: 10),
                 Text(
@@ -324,7 +458,10 @@ class HomePage extends StatelessWidget {
 }
 
 class _BackgroundOrb extends StatelessWidget {
-  const _BackgroundOrb({required this.size, required this.color});
+  const _BackgroundOrb({
+    required this.size,
+    required this.color,
+  });
 
   final double size;
   final Color color;
