@@ -20,10 +20,45 @@ class _DashboardPageState extends State<DashboardPage> {
     decimalDigits: 0,
   );
 
+  final TextEditingController _searchController = TextEditingController();
+
+  String _searchQuery = '';
+  DateTime? _selectedDate;
+
+  Future<void> _selectDate() async {
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+      helpText: 'Pilih tanggal penjualan',
+      cancelText: 'Batal',
+      confirmText: 'Pilih',
+    );
+
+    if (pickedDate == null) return;
+
+    setState(() {
+      _selectedDate = pickedDate;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     _loadSales();
+
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text.trim().toLowerCase();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   void _loadSales() {
@@ -36,6 +71,27 @@ class _DashboardPageState extends State<DashboardPage> {
     });
 
     await _salesFuture;
+  }
+
+  List<Sale> _filterSales(List<Sale> sales) {
+    return sales.where((sale) {
+      final invoiceNumber = sale.invoiceNumber.toLowerCase();
+      final customerName = sale.customerName.toLowerCase();
+
+      // Filter berdasarkan pencarian
+      final matchesSearch =
+          _searchQuery.isEmpty ||
+          invoiceNumber.contains(_searchQuery) ||
+          customerName.contains(_searchQuery);
+
+      // Filter berdasarkan tanggal
+      final matchesDate = _selectedDate == null ||
+          (sale.saleDate.year == _selectedDate!.year &&
+              sale.saleDate.month == _selectedDate!.month &&
+              sale.saleDate.day == _selectedDate!.day);
+
+      return matchesSearch && matchesDate;
+    }).toList();
   }
 
   @override
@@ -79,10 +135,11 @@ class _DashboardPageState extends State<DashboardPage> {
               }
 
               final sales = snapshot.data ?? [];
+              final filteredSales = _filterSales(sales);
 
-              final int totalTransactions = sales.length;
+              final int totalTransactions = filteredSales.length;
 
-              final double totalRevenue = sales.fold(
+              final double totalRevenue = filteredSales.fold(
                 0,
                 (sum, data) => sum + data.totalSale,
               );
@@ -105,7 +162,6 @@ class _DashboardPageState extends State<DashboardPage> {
                       color: Colors.white.withValues(alpha: 0.08),
                     ),
                   ),
-
                   Column(
                     children: [
                       Padding(
@@ -248,7 +304,6 @@ class _DashboardPageState extends State<DashboardPage> {
                                   ),
                                   const Spacer(),
 
-                                  // Tombol refresh
                                   IconButton(
                                     onPressed: _refreshSales,
                                     tooltip: 'Refresh data',
@@ -280,116 +335,219 @@ class _DashboardPageState extends State<DashboardPage> {
                                 ],
                               ),
 
-                              const SizedBox(height: 18),
+                              const SizedBox(height: 14),
+
+                              // ==============================
+                              // SEARCH
+                              // ==============================
+                              TextField(
+                                controller: _searchController,
+                                decoration: InputDecoration(
+                                  hintText:
+                                      'Cari no faktur atau customer...',
+                                  prefixIcon: const Icon(
+                                    Icons.search_rounded,
+                                  ),
+                                  suffixIcon: _searchQuery.isNotEmpty
+                                      ? IconButton(
+                                          onPressed: () {
+                                            _searchController.clear();
+                                          },
+                                          icon: const Icon(
+                                            Icons.clear_rounded,
+                                          ),
+                                          tooltip: 'Hapus pencarian',
+                                        )
+                                      : null,
+                                  filled: true,
+                                  fillColor:
+                                      const Color(0xFFF8FAFC),
+                                  border: OutlineInputBorder(
+                                    borderRadius:
+                                        BorderRadius.circular(18),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius:
+                                        BorderRadius.circular(18),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFFE2E8F0),
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius:
+                                        BorderRadius.circular(18),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFF2563EB),
+                                      width: 1.4,
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 10),
+
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: OutlinedButton.icon(
+                                      onPressed: _selectDate,
+                                      icon: const Icon(
+                                        Icons.calendar_month_rounded,
+                                        size: 20,
+                                      ),
+                                      label: Text(
+                                        _selectedDate == null
+                                            ? 'Semua tanggal'
+                                            : DateFormat(
+                                                'dd/MM/yyyy',
+                                              ).format(_selectedDate!),
+                                      ),
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor: const Color(0xFF1D4ED8),
+                                        side: const BorderSide(
+                                          color: Color(0xFFE2E8F0),
+                                        ),
+                                        backgroundColor: const Color(0xFFF8FAFC),
+                                        minimumSize: const Size(
+                                          0,
+                                          50,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(18),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+
+                                  if (_selectedDate != null) ...[
+                                    const SizedBox(width: 10),
+                                    SizedBox(
+                                      height: 50,
+                                      width: 50,
+                                      child: IconButton(
+                                        onPressed: () {
+                                          setState(() {
+                                            _selectedDate = null;
+                                          });
+                                        },
+                                        tooltip: 'Reset tanggal',
+                                        style: IconButton.styleFrom(
+                                          backgroundColor: const Color(0xFFFEE2E2),
+                                          foregroundColor: const Color(0xFFDC2626),
+                                        ),
+                                        icon: const Icon(
+                                          Icons.close_rounded,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+
+                              const SizedBox(height: 14),
 
                               Expanded(
                                 child: ClipRRect(
-                                  borderRadius:
-                                      BorderRadius.circular(24),
+                                  borderRadius: BorderRadius.circular(24),
                                   child: Container(
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFF8FAFC),
                                       border: Border.all(
-                                        color:
-                                            const Color(0xFFE2E8F0),
+                                        color: const Color(0xFFE2E8F0),
                                       ),
                                     ),
-                                    child: sales.isEmpty
-                                        ? const Center(
-                                            child: Text(
-                                              'Belum ada data penjualan',
-                                              style: TextStyle(
-                                                color:
-                                                    Color(0xFF64748B),
-                                                fontSize: 14,
-                                              ),
-                                            ),
-                                          )
-                                        : SingleChildScrollView(
-                                            scrollDirection:
-                                                Axis.horizontal,
-                                            child: DataTable(
-                                              headingRowColor:
-                                                  WidgetStateProperty.all(
-                                                const Color(0xFF0F172A),
-                                              ),
-                                              headingTextStyle:
-                                                  const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight:
-                                                    FontWeight.w700,
-                                              ),
-                                              dataTextStyle:
-                                                  const TextStyle(
-                                                color:
-                                                    Color(0xFF0F172A),
-                                                fontSize: 13,
-                                              ),
-                                              columnSpacing: 24,
-                                              horizontalMargin: 18,
-                                              columns: const [
-                                                DataColumn(
-                                                  label:
-                                                      Text('No Faktur'),
+                                    child: filteredSales.isEmpty
+                                        ? Center(
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const Icon(
+                                                  Icons.search_off_rounded,
+                                                  size: 44,
+                                                  color: Color(0xFF94A3B8),
                                                 ),
-                                                DataColumn(
-                                                  label:
-                                                      Text('Tanggal'),
-                                                ),
-                                                DataColumn(
-                                                  label:
-                                                      Text('Customer'),
-                                                ),
-                                                DataColumn(
-                                                  label: Text(
-                                                    'Jumlah Barang',
-                                                  ),
-                                                ),
-                                                DataColumn(
-                                                  label: Text(
-                                                    'Total Penjualan',
+                                                const SizedBox(height: 12),
+                                                Text(
+                                                  _searchQuery.isEmpty && _selectedDate == null
+                                                      ? 'Belum ada data penjualan'
+                                                      : 'Data tidak ditemukan',
+                                                  style: const TextStyle(
+                                                    color: Color(0xFF64748B),
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w600,
                                                   ),
                                                 ),
                                               ],
-                                              rows: sales.map((data) {
-                                                return DataRow(
-                                                  cells: [
-                                                    DataCell(
-                                                      Text(
-                                                        data.invoiceNumber,
+                                            ),
+                                          )
+                                        : SingleChildScrollView(
+                                            scrollDirection: Axis.vertical,
+                                            child: SingleChildScrollView(
+                                              scrollDirection: Axis.horizontal,
+                                              child: DataTable(
+                                                headingRowColor: WidgetStateProperty.all(
+                                                  const Color(0xFF0F172A),
+                                                ),
+                                                headingTextStyle: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                                dataTextStyle: const TextStyle(
+                                                  color: Color(0xFF0F172A),
+                                                  fontSize: 13,
+                                                ),
+                                                columnSpacing: 24,
+                                                horizontalMargin: 18,
+                                                columns: const [
+                                                  DataColumn(
+                                                    label: Text('No Faktur'),
+                                                  ),
+                                                  DataColumn(
+                                                    label: Text('Tanggal'),
+                                                  ),
+                                                  DataColumn(
+                                                    label: Text('Customer'),
+                                                  ),
+                                                  DataColumn(
+                                                    label: Text('Jumlah Barang'),
+                                                  ),
+                                                  DataColumn(
+                                                    label: Text('Total Penjualan'),
+                                                  ),
+                                                ],
+                                                rows: filteredSales.map((data) {
+                                                  return DataRow(
+                                                    cells: [
+                                                      DataCell(
+                                                        Text(data.invoiceNumber),
                                                       ),
-                                                    ),
-                                                    DataCell(
-                                                      Text(
-                                                        DateFormat(
-                                                          'dd/MM/yyyy',
-                                                        ).format(
-                                                          data.saleDate,
+                                                      DataCell(
+                                                        Text(
+                                                          DateFormat('dd/MM/yyyy').format(
+                                                            data.saleDate,
+                                                          ),
                                                         ),
                                                       ),
-                                                    ),
-                                                    DataCell(
-                                                      Text(
-                                                        data.customerName,
+                                                      DataCell(
+                                                        Text(data.customerName),
                                                       ),
-                                                    ),
-                                                    DataCell(
-                                                      Text(
-                                                        data.itemQuantity
-                                                            .toString(),
-                                                      ),
-                                                    ),
-                                                    DataCell(
-                                                      Text(
-                                                        _currencyFormat
-                                                            .format(
-                                                          data.totalSale,
+                                                      DataCell(
+                                                        Text(
+                                                          data.itemQuantity.toString(),
                                                         ),
                                                       ),
-                                                    ),
-                                                  ],
-                                                );
-                                              }).toList(),
+                                                      DataCell(
+                                                        Text(
+                                                          _currencyFormat.format(
+                                                            data.totalSale,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  );
+                                                }).toList(),
+                                              ),
                                             ),
                                           ),
                                   ),
@@ -568,7 +726,8 @@ class _StatCard extends StatelessWidget {
                 Text(
                   label,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.82),
+                    color:
+                        Colors.white.withValues(alpha: 0.82),
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),
