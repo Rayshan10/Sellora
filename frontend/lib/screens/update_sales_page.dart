@@ -110,22 +110,81 @@ class _UpdateSalesPageState extends State<UpdateSalesPage> {
     }
   }
 
-  Future<void> _updateSale() async {
-    if (_isUpdating) return;
+  Future<void> _showUpdateConfirmation() async {
+    if (_selectedSale == null) return;
 
-    if (_selectedSale == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Silakan pilih nomor faktur terlebih dahulu'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          title: const Row(
+            children: [
+              Icon(
+                Icons.edit_rounded,
+                color: Color(0xFF2563EB),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Konfirmasi Update',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            'Yakin ingin memperbarui data transaksi '
+            '${_selectedSale!.invoiceNumber}?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, false);
+              },
+              child: const Text(
+                'Batal',
+                style: TextStyle(
+                  color: Color(0xFF64748B),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, true);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0F172A),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: const Text(
+                'Update',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
 
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    if (confirmed != true) return;
+
+    await _performUpdate();
+  }
+
+  Future<void> _performUpdate() async {
+    if (_isUpdating || _selectedSale == null) return;
 
     final int? itemQuantity = int.tryParse(
       _quantityController.text.trim(),
@@ -136,14 +195,6 @@ class _UpdateSalesPageState extends State<UpdateSalesPage> {
     );
 
     if (itemQuantity == null || totalSale == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Jumlah barang atau total penjualan tidak valid',
-          ),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
       return;
     }
 
@@ -199,6 +250,48 @@ class _UpdateSalesPageState extends State<UpdateSalesPage> {
         });
       }
     }
+  }
+
+  Future<void> _updateSale() async {
+    if (_isUpdating) return;
+
+    if (_selectedSale == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Silakan pilih nomor faktur terlebih dahulu',
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    final int? itemQuantity = int.tryParse(
+      _quantityController.text.trim(),
+    );
+
+    final double? totalSale = double.tryParse(
+      _totalController.text.trim(),
+    );
+
+    if (itemQuantity == null || totalSale == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Jumlah barang atau total penjualan tidak valid',
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    await _showUpdateConfirmation();
   }
 
   @override
