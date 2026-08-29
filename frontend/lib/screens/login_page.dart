@@ -54,7 +54,7 @@ class _LoginPageState extends State<LoginPage> {
 
       Navigator.pushReplacementNamed(
         context,
-        '/home',
+        '/dashboard',
       );
     } catch (error) {
       if (!mounted) return;
@@ -124,7 +124,6 @@ class _LoginPageState extends State<LoginPage> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         const SizedBox(height: 24),
-
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 18,
@@ -147,9 +146,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                         ),
-
                         const SizedBox(height: 18),
-
                         const Text(
                           'Selamat datang kembali',
                           textAlign: TextAlign.center,
@@ -160,9 +157,7 @@ class _LoginPageState extends State<LoginPage> {
                             height: 1.1,
                           ),
                         ),
-
                         const SizedBox(height: 10),
-
                         Text(
                           'Masuk untuk melanjutkan ke dashboard dan kelola data penjualan dengan lebih cepat.',
                           textAlign: TextAlign.center,
@@ -172,9 +167,7 @@ class _LoginPageState extends State<LoginPage> {
                             height: 1.5,
                           ),
                         ),
-
                         const SizedBox(height: 28),
-
                         Container(
                           padding: const EdgeInsets.all(22),
                           decoration: BoxDecoration(
@@ -225,9 +218,7 @@ class _LoginPageState extends State<LoginPage> {
                                   ),
                                 ),
                               ),
-
                               const SizedBox(height: 16),
-
                               TextField(
                                 controller: _passwordController,
                                 obscureText: _obscurePassword,
@@ -275,9 +266,7 @@ class _LoginPageState extends State<LoginPage> {
                                   ),
                                 ),
                               ),
-
                               const SizedBox(height: 12),
-
                               Align(
                                 alignment: Alignment.centerRight,
                                 child: TextButton(
@@ -288,9 +277,7 @@ class _LoginPageState extends State<LoginPage> {
                                   child: const Text('Lupa password?'),
                                 ),
                               ),
-
                               const SizedBox(height: 8),
-
                               SizedBox(
                                 height: 54,
                                 child: ElevatedButton(
@@ -330,9 +317,7 @@ class _LoginPageState extends State<LoginPage> {
                             ],
                           ),
                         ),
-
                         const SizedBox(height: 20),
-
                         Text(
                           'Gunakan akun yang terdaftar untuk mengakses aplikasi.',
                           textAlign: TextAlign.center,

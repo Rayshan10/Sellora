@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 
 import 'screens/login_page.dart';
-import 'screens/home_page.dart';
-import 'screens/dashboard_page.dart';
-import 'screens/add_sales_page.dart';
-import 'screens/update_sales_page.dart';
-import 'screens/delete_sales_page.dart';
+import 'screens/dashboard_home_screen.dart';
 import 'storage/token_storage.dart';
+import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,18 +30,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Sellora',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      initialRoute: hasToken ? '/home' : '/',
+      theme: AppTheme.theme,
+      initialRoute: hasToken ? '/dashboard' : '/',
       routes: {
         '/': (context) => const LoginPage(),
-        '/home': (context) => const HomePage(),
-        '/dashboard': (context) => const DashboardPage(),
-        '/add-sales': (context) => const AddSalesPage(),
-        '/update-sales': (context) => const UpdateSalesPage(),
-        '/delete-sales': (context) => const DeleteSalesPage(),
+        '/dashboard': (context) => const DashboardHomeScreen(),
       },
     );
   }
