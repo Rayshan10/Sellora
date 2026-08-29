@@ -670,53 +670,64 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
                                   ],
                                 ),
                               )
-                            : SingleChildScrollView(
-                                child: DataTable(
-                                  headingRowColor: WidgetStateProperty.all(
-                                    AppTheme.lightBackground,
-                                  ),
-                                  columns: const [
-                                    DataColumn(label: Text('Invoice')),
-                                    DataColumn(label: Text('Pelanggan')),
-                                    DataColumn(label: Text('Jumlah')),
-                                    DataColumn(label: Text('Total')),
-                                  ],
-                                  rows: filteredSales
-                                      .map(
-                                        (sale) => DataRow(
-                                          cells: [
-                                            DataCell(
-                                              Text(
-                                                sale.invoiceNumber,
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.w600,
+                            : LayoutBuilder(
+                                builder: (context, constraints) {
+                                  if (constraints.maxWidth < 600) {
+                                    return _buildMobileSalesList(filteredSales);
+                                  }
+
+                                  return SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: DataTable(
+                                      headingRowColor: WidgetStateProperty.all(
+                                        AppTheme.lightBackground,
+                                      ),
+                                      columns: const [
+                                        DataColumn(label: Text('Invoice')),
+                                        DataColumn(label: Text('Pelanggan')),
+                                        DataColumn(label: Text('Jumlah')),
+                                        DataColumn(label: Text('Total')),
+                                      ],
+                                      rows: filteredSales
+                                          .map(
+                                            (sale) => DataRow(
+                                              cells: [
+                                                DataCell(
+                                                  Text(
+                                                    sale.invoiceNumber,
+                                                    style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                                  ),
                                                 ),
-                                              ),
-                                            ),
-                                            DataCell(
-                                              Text(sale.customerName),
-                                            ),
-                                            DataCell(
-                                              Text(
-                                                '${sale.itemQuantity}',
-                                              ),
-                                            ),
-                                            DataCell(
-                                              Text(
-                                                _currencyFormat.format(
-                                                  sale.totalSale,
+                                                DataCell(
+                                                  Text(sale.customerName),
                                                 ),
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Color(0xFF10B981),
+                                                DataCell(
+                                                  Text(
+                                                    '${sale.itemQuantity}',
+                                                  ),
                                                 ),
-                                              ),
+                                                DataCell(
+                                                  Text(
+                                                    _currencyFormat.format(
+                                                      sale.totalSale,
+                                                    ),
+                                                    style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: Color(0xFF10B981),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                          ],
-                                        ),
-                                      )
-                                      .toList(),
-                                ),
+                                          )
+                                          .toList(),
+                                    ),
+                                  );
+                                },
                               ),
                       ),
                     ],
@@ -727,6 +738,98 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMobileSalesList(List<Sale> sales) {
+    return ListView.separated(
+      padding: const EdgeInsets.only(bottom: 12),
+      itemCount: sales.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 10),
+      itemBuilder: (context, index) {
+        final sale = sales[index];
+
+        return Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppTheme.borderColor),
+            boxShadow: AppTheme.cardShadow,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.receipt_long_rounded,
+                    color: Color(0xFF1D4ED8),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      sale.invoiceNumber,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textDark,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    _currencyFormat.format(sale.totalSale),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF10B981),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: _mobileSaleDetail(
+                      'Pelanggan',
+                      sale.customerName,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  _mobileSaleDetail(
+                    'Jumlah',
+                    '${sale.itemQuantity} barang',
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _mobileSaleDetail(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 11,
+            color: AppTheme.textLight,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          value,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontSize: 13,
+            color: AppTheme.textDark,
+          ),
+        ),
+      ],
     );
   }
 
